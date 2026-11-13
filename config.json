@@ -1,0 +1,134 @@
+{
+  "brief_name": "AI早知道",
+  "timezone_utc_offset": 8,
+  "timezone_label": "北京时间",
+  "schedule": {
+    "run_time": "08:20",
+    "push_time": "09:00"
+  },
+  "window_hours": 24,
+  "dedupe_days": 14,
+  "min_importance": 3,
+  "max_total_items": 20,
+  "min_searches_per_section": 5,
+  "max_tool_calls": 80,
+  "sections": [
+    {
+      "name": "AI动态",
+      "icon": "🤖",
+      "max_items": 8,
+      "window_hours": 24,
+      "focus": "大模型与 AI 产品的发布/更新、头部公司动向、开源进展、算力与芯片、AI 政策监管、重要融资并购",
+      "tags": [],
+      "corroboration_exempt_tags": [],
+      "writing_hint": "",
+      "keywords": [
+        "大模型 发布",
+        "AI Agent 智能体",
+        "OpenAI",
+        "Anthropic Claude",
+        "Google Gemini",
+        "DeepSeek",
+        "通义千问 Qwen",
+        "开源模型",
+        "AI 芯片 算力",
+        "AI 监管 政策",
+        "AI 融资 收购",
+        "LLM release",
+        "AI model launch"
+      ]
+    },
+    {
+      "name": "信息安全",
+      "icon": "🛡️",
+      "max_items": 6,
+      "window_hours": 24,
+      "focus": "高危漏洞与在野利用、重大数据泄露、勒索与供应链攻击、安全法规与处罚、AI 相关的安全风险",
+      "tags": [],
+      "corroboration_exempt_tags": [],
+      "writing_hint": "看点写清「谁需要做什么」：升级到哪个版本、排查什么配置、重置什么凭据。",
+      "keywords": [
+        "高危漏洞 CVE",
+        "0day 在野利用",
+        "数据泄露",
+        "勒索软件",
+        "供应链攻击",
+        "APT 攻击",
+        "网络安全 法规 处罚",
+        "个人信息保护",
+        "AI 安全 提示词注入",
+        "vulnerability exploited in the wild",
+        "data breach"
+      ]
+    },
+    {
+      "name": "产品经理",
+      "icon": "🧭",
+      "max_items": 6,
+      "window_hours": 168,
+      "focus": "站在产品经理的角度，找「值得关注」和「值得学」的内容：① 行业观察——岗位与能力要求的变化、行业报告与数据、头部公司的产品策略；② 方法与案例——可借鉴的方法论、实战案例、复盘、优秀产品拆解；③ AI提效工具——能帮产品经理降本增效的 AI 工具、工作流与提示词实践（需求分析、原型生成、用户研究、数据分析、文档写作等环节）；④ 新思路与创作——AI 原生产品的新交互、新形态，以及有启发的个人作品与实验。优先能直接上手或借鉴的；纯概念、空泛鸡汤、课程与社群推广不收。",
+      "tags": [
+        "行业观察",
+        "方法与案例",
+        "AI提效工具",
+        "新思路与创作"
+      ],
+      "corroboration_exempt_tags": [
+        "方法与案例",
+        "AI提效工具",
+        "新思路与创作"
+      ],
+      "writing_hint": "AI提效工具类：摘要写清它能做什么、用在产品工作的哪个环节；看点写清能省掉哪部分工作、怎么上手（免费/付费、门槛）。方法与案例类：摘要提炼出可复用的要点，而不是复述文章结构。四个细分尽量都覆盖，宁缺毋滥。",
+      "keywords": [
+        "产品经理 行业 趋势",
+        "产品经理 能力 要求 变化",
+        "产品经理 AI 工作流",
+        "AI 原型 工具",
+        "AI 生成 PRD 需求文档",
+        "AI 用户研究 访谈 分析",
+        "产品 拆解 案例",
+        "产品 复盘",
+        "AI 原生产品 交互 设计",
+        "product manager AI workflow",
+        "AI prototyping tool",
+        "product teardown",
+        "AI native product design"
+      ]
+    }
+  ],
+  "blocked_url_patterns": [
+    "://t.co/",
+    "://bit.ly/",
+    "://t.cn/",
+    "://url.cn/",
+    "://dwz.cn/",
+    "://link.zhihu.com/",
+    "://news.google.com/",
+    "google.com/search",
+    "google.com/url",
+    "baidu.com/link",
+    "baidu.com/s?",
+    "sogou.com/link",
+    "so.com/link",
+    "bing.com/search",
+    "bing.com/news",
+    "/search?",
+    "/search/",
+    "?s=",
+    "/tag/",
+    "/tags/",
+    "/category/",
+    "/topics/"
+  ],
+  "claude": {
+    "claude_path": "",
+    "model": "",
+    "effort": "",
+    "max_turns": 160,
+    "timeout_minutes": 45
+  },
+  "push": {
+    "channels": [],
+    "format": "markdown"
+  }
+}

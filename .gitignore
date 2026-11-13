@@ -1,0 +1,13 @@
+# 个人数据与密钥：只留在本机，绝不提交
+secrets.json
+state/
+logs/
+briefs/
+runtime/
+
+# 生成物
+*.exe
+*.zip
+__pycache__/
+*.pyc
+launcher/_preview.png
