@@ -204,6 +204,9 @@ def run_info(r, running):
         p = run_brief.load_json(r / "推送结果.json")
         pushed = p.get("results") if isinstance(p, dict) else p
     info["pushed"] = None if not pushed else all(x.get("ok") for x in pushed)
+    bad = [x for x in (pushed or []) if not x.get("ok")]
+    info["push_failed"] = [push.CHANNEL_NAMES.get(x.get("channel"), x.get("channel")) for x in bad]
+    info["push_error"] = str(bad[0].get("detail") or bad[0].get("response") or "")[:400] if bad else ""
     if running and running.get("run_dir") == r.relative_to(ROOT).as_posix():
         info["status"] = "running"
     elif s.get("ok"):
@@ -262,6 +265,7 @@ def overview():
         "now": dt.datetime.now(tzinfo).strftime("%Y-%m-%d %H:%M"),
         "run_time": c["schedule"]["run_time"], "push_time": c["schedule"]["push_time"],
         "latest": runs[0] if runs else None,
+        "last_push": next((r for r in runs if r.get("pushed") is not None), None),
         "schedule": schedule_status(),
         "push": {"channels": c.get("push", {}).get("channels", []), "format": c.get("push", {}).get("format", "markdown"),
                  "filled": {ch: push.channel_ready(ch, sec) for ch in push.CHANNEL_FIELDS}},

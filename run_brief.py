@@ -647,6 +647,30 @@ def wait_until(hhmm, tz, log):
         time.sleep(secs)
 
 
+def notify_desktop(title, body, log=None):
+    """在 Windows 右下角弹一条系统通知（推送失败时，推送通道本身靠不住，只能靠这个提醒）。"""
+    script = (
+        "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > $null;"
+        "$t = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent("
+        "[Windows.UI.Notifications.ToastTemplateType]::ToastText02);"
+        "$x = $t.GetElementsByTagName('text');"
+        "$x.Item(0).AppendChild($t.CreateTextNode($env:AIZZD_TITLE)) > $null;"
+        "$x.Item(1).AppendChild($t.CreateTextNode($env:AIZZD_BODY)) > $null;"
+        "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("
+        "'{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe'"
+        ").Show([Windows.UI.Notifications.ToastNotification]::new($t))")
+    env = os.environ.copy()
+    env["AIZZD_TITLE"], env["AIZZD_BODY"] = title, body[:250]
+    try:
+        p = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+                           env=env, capture_output=True, timeout=30, creationflags=CREATE_NO_WINDOW)
+        if log and p.returncode != 0:
+            log("桌面通知没弹出来：" + (p.stderr or b"").decode("utf-8", "replace")[-200:])
+    except Exception as exc:
+        if log:
+            log(f"桌面通知没弹出来：{exc!r}")
+
+
 def do_push(cfg, secrets, title, md, html_body, run_dir, log):
     pcfg = cfg.get("push", {})
     chans = pcfg.get("channels", [])
@@ -658,10 +682,17 @@ def do_push(cfg, secrets, title, md, html_body, run_dir, log):
     for r in res:
         name = push.CHANNEL_NAMES.get(r["channel"], r["channel"])
         log(f"推送 {name}：{'成功 ' + (r.get('note') or '') if r['ok'] else '失败 ' + str(r.get('detail') or r.get('response'))}")
+    failed = [r for r in res if not r["ok"]]
+    if failed:
+        names = "、".join(push.CHANNEL_NAMES.get(r["channel"], r["channel"]) for r in failed)
+        first = str(failed[0].get("detail") or failed[0].get("response") or "")
+        notify_desktop(f"{cfg['brief_name']}：{names}推送失败",
+                       f"{first[:150]}　打开 {cfg['brief_name']} →「推送与定时」处理。", log)
     return res
 
 
 def notify_failure(cfg, secrets, now, reason, run_dir, log):
+    notify_desktop(f"{cfg['brief_name']}：今天的早报生成失败", f"{reason[:150]}　打开 {cfg['brief_name']} 查看原因。", log)
     hint = ""
     low = reason.lower()
     if any(w in low for w in AUTH_WORDS):

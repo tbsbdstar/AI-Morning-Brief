@@ -147,6 +147,8 @@ label.inline{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;col
 .ch .fld input{width:100%}
 .ch .fld small{color:var(--mute);font-size:12.5px}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 14px;font-size:14.5px}
+.alert{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:14px;line-height:1.6}
+.alert b{display:block;margin-bottom:2px}
 .kv div:nth-child(odd){color:var(--sub)}
 
 /* 环境检查 */
@@ -268,6 +270,7 @@ label.inline{display:inline-flex;align-items:center;gap:8px;font-size:14.5px;col
   <!-- 推送与定时 -->
   <section class="view" id="v-push">
     <div class="head"><div class="grow"><h1>推送与定时</h1><p>个人微信不开放给程序直接发消息，只能借第三方公众号或邮箱转达；勾选要用的通道并填写</p></div></div>
+    <div class="alert" id="pushAlert" hidden></div>
     <div class="chans" id="pChans"></div>
     <div class="card" style="margin-top:12px">
       <div class="row">
@@ -393,7 +396,15 @@ function renderStatus(){
   else if(cli.logged_in === false) rows.push(['bad', 'Claude 未登录', 'env']);
   const L = OV.latest;
   if(OV.progress) rows.push(['run', '正在生成…', 'brief']);
-  else if(L) rows.push([L.status === 'ok' ? 'ok' : 'bad', `上次 ${L.date.slice(5)} ${L.time||''} ${L.status === 'ok' ? '成功' : '失败'}`, 'brief']);
+  else if(L) rows.push([L.status === 'ok' ? 'ok' : 'bad', `上次生成 ${L.date.slice(5)} ${L.time||''} ${L.status === 'ok' ? '成功' : '失败'}`, 'brief']);
+  const LP = OV.last_push;
+  if(LP && LP.push_failed?.length) rows.push(['bad', `${LP.date.slice(5)} 推送失败：${LP.push_failed.join('、')}`, 'push']);
+  else if(LP) rows.push(['ok', `${LP.date.slice(5)} 已推送`, 'brief']);
+  const banner = $('#pushAlert');
+  if(banner){
+    if(LP && LP.push_failed?.length){ banner.hidden = false; banner.innerHTML = `<b>${esc(LP.date)} 的推送失败：${esc(LP.push_failed.join('、'))}</b><div>${esc(LP.push_error)}</div>`; }
+    else banner.hidden = true;
+  }
   $('#status').innerHTML = rows.map(([c, t, go]) => `<div data-go="${go}"><span class="dot ${c}"></span>${esc(t)}</div>`).join('');
   $$('#status [data-go]').forEach(el => el.onclick = () => showTab(el.dataset.go));
   const issues = (cli.logged_in === false || cli.mode !== 'token' ? 1 : 0) + (sc.installed === false ? 1 : 0) + (!chans.length || bad.length ? 1 : 0);
@@ -728,9 +739,12 @@ async function loadEnv(){
     authAct = '<button class="primary" data-t="open">设置长期令牌</button>' + (c.logged_in ? '' : '<button data-a="login">账号登录</button>');
   }
   items.push([authCls, 'Claude 授权（每天检索要用）', authText, authAct]);
-  const p = ENV.push, lt = p.last_test || {};
-  items.push([p.ready ? (lt.results?.some(x => x.ok) ? 'ok' : 'warn') : 'bad', '推送通道',
-    p.ready ? `${p.channels.join('、')}${lt.time ? `　·　上次测试 ${lt.time} ` + (lt.results||[]).map(x => (x.ok ? '已发出' : '失败')).join('/') : '　·　还没发过测试'}` : '还没选通道或没填完',
+  const p = ENV.push, lt = p.last_test || {}, LP = OV?.last_push;
+  const pushBad = LP && LP.push_failed?.length;
+  items.push([!p.ready || pushBad ? 'bad' : LP || lt.results?.some(x => x.ok) ? 'ok' : 'warn', '推送通道',
+    !p.ready ? '还没选通道或没填完'
+      : pushBad ? `${LP.date} 推送失败（${LP.push_failed.join('、')}）：${LP.push_error}`
+      : `${p.channels.join('、')}` + (LP ? `　·　${LP.date} 已推送` : lt.time ? `　·　上次测试 ${lt.time}` : '　·　还没发过测试'),
     '<button data-go="push">去设置</button>']);
   const s = ENV.schedule || {};
   items.push([s.installed ? 'ok' : s.installed === false ? 'warn' : 'wait', '每日定时任务（这台电脑）',

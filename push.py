@@ -93,6 +93,20 @@ def split_list(s):
     return [x for x in SPLIT_RE.split(str(s or "").strip()) if x]
 
 
+class EmailLoginError(ValueError):
+    """邮箱拒绝登录。属于配置问题，重试没用，反而会被邮箱判为频繁登录，所以不重试。"""
+
+    def __init__(self, addr, exc):
+        dom = addr.split("@")[-1].lower()
+        where = ("QQ 邮箱网页版 → 右上角头像 →「设置」→「账号与安全」→「安全设置」：确认 SMTP 服务已开启，"
+                 "点「生成授权码」拿一个新的" if dom in ("qq.com", "foxmail.com", "vip.qq.com")
+                 else "邮箱网页版的设置里：确认 SMTP 服务已开启，重新生成授权码")
+        code = getattr(exc, "smtp_code", "") or ""
+        super().__init__(f"邮箱拒绝登录{f'（{code}）' if code else ''}：授权码已失效（改过邮箱密码会让它作废）、"
+                         f"SMTP 服务被关闭，或登录被限制。请到 {where}，"
+                         "再填到 AI早知道「推送与定时」→ 邮件 →「SMTP 授权码」，点「保存并发一条测试」。")
+
+
 def _email(sec, title, md, html, fmt):
     """邮件永远用 HTML 排版（邮箱都能渲染），附带纯文本备份。多个收件人时每人单独发一封，互相看不到对方地址。"""
     addr = sec.get("email_address", "").strip()
@@ -121,7 +135,13 @@ def _email(sec, title, md, html, fmt):
         s.starttls(context=ctx)
     sent, failed = [], {}
     with s:
-        s.login(addr, code)  # 登录失败直接抛出，由外层给出「授权码不对」的提示
+        # 只用 AUTH LOGIN 登录一次：smtplib 默认会换着方式连试好几次，QQ 邮箱会把短时间内的多次失败判为异常
+        s.user, s.password = addr, code
+        try:
+            s.ehlo_or_helo_if_needed()
+            s.auth("LOGIN", s.auth_login, initial_response_ok=False)
+        except (smtplib.SMTPAuthenticationError, smtplib.SMTPServerDisconnected) as exc:
+            raise EmailLoginError(addr, exc) from None
         for to in rcpts:     # 逐个发：某个地址出错不影响其他人，也不会因为重试给已收到的人重复发
             msg = EmailMessage()
             msg["Subject"] = title
